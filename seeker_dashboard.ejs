@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GigVault - Job Seeker Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .logo {
+      height: 90px;
+      max-width: 160px;
+      display: block;
+    }
+
+    .top-icons i {
+      font-size: 18px;
+      color: #555;
+      margin-left: 20px;
+      cursor: pointer;
+    }
+
+    .welcome-bar {
+      background: #ffffff;
+      padding: 10px 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .welcome-bar span.badge {
+      font-size: 13px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+
+    .slider-container {
+      margin: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .carousel-caption {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      padding: 10px 15px;
+    }
+
+    .marquee-banner {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 8px 16px;
+      font-weight: bold;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin: 20px;
+    }
+
+    .job-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .job-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .job-meta {
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <img src="/img/gigvult-logo.jpg" alt="GigVault Logo" class="logo">
+    <div class="top-icons">
+      <i class="fas fa-wallet" title="Wallet"></i>
+      <i class="fas fa-gas-pump" title="Gas Info"></i>
+      <i class="fas fa-bars" title="Menu"></i>
+      <a href="/logout" class="btn btn-outline-danger btn-sm" style="position: absolute; top: 15px; right: 20px;">
+  Logout
+</a>
+
+    </div>
+  </div>
+
+  <!-- Welcome Bar with Get Verified Badge -->
+  <div class="welcome-bar">
+  Hi, <%= user.username %> 
+  <% if (user.is_premium) { %>
+    <span class="badge bg-success text-light">Premium Verified</span>
+  <% } else if (user.pending_premium) { %>
+    <span class="badge bg-secondary text-light">Pending</span>
+  <% } else { %>
+    <span class="badge bg-warning text-dark" onclick="location.href='/dashboard/premium'">Get Verified</span>
+  <% } %>
+</div>
+
+<!-- Notifications (if any) -->
+<% if (typeof notifications !== 'undefined' && notifications.length > 0) { %>
+  <div class="container mt-3">
+    <div class="alert alert-info">
+      <h5><i class="fas fa-bell"></i> Notifications</h5>
+      <% notifications.forEach(note => { %>
+        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+          <span><%= note.message %></span>
+          <form action="/dashboard/notifications/<%= note.id %>/delete" method="POST" style="margin:0;">
+            <button class="btn btn-sm btn-danger">×</button>
+          </form>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
+
+
+
+<% if (user.is_premium) { %>
+  <a href="/dashboard/exclusive-analytics" class="btn btn-outline-primary btn-sm">📊 View Analytics</a>
+  <a href="/dashboard/recommended-jobs" class="btn btn-outline-success btn-sm">Recommended Jobs</a>
+  <a href="/dashboard/edit-showcase" class="btn btn-outline-success btn-sm">Showcase</a>
+  <a href="/dashboard/premium-network" class="btn btn-outline-secondary">Premium Lounge</a>
+ <div class="mt-4 p-3 border rounded bg-white">
+    <h5><i class="fas fa-star text-warning"></i> My Showcase</h5>
+    <p><%= user.showcase %></p>
+  </div>
+
+<% } %>
+
+<div class="container mt-4">
+  <h5><p><i class="fas fa-wallet"></i> Wallet Balance: $<%= balance.toFixed(2) %></p></h5>
+
+  <% if (user.role === 'owner') { %>
+    <!-- Fund Wallet -->
+    <form action="/dashboard/fund-wallet" method="POST" class="mb-3">
+      <label for="amount">Add Funds (₦):</label>
+      <input type="number" name="amount" required class="form-control" min="100" />
+      <button type="submit" class="btn btn-success btn-sm mt-2">Add Funds</button>
+    </form>
+
+    <!-- Pay Seeker -->
+    <% if (recentApplicants && recentApplicants.length > 0) { %>
+      <form action="/dashboard/transfer-funds" method="POST">
+        <label for="seeker_id">Choose Seeker:</label>
+        <select name="seeker_id" class="form-select">
+          <% recentApplicants.forEach(app => { %>
+            <option value="<%= app.seeker_id %>">@<%= app.seeker_name %> (ID: <%= app.seeker_id %>)</option>
+          <% }) %>
+        </select>
+
+        <label for="amount" class="mt-2">Amount ($):</label>
+        <input type="number" name="amount" required class="form-control" min="1" />
+
+        <button type="submit" class="btn btn-primary btn-sm mt-2">Pay Seeker</button>
+      </form>
+    <% } else { %>
+      <div class="alert alert-info mt-2">No applicants available to pay.</div>
+    <% } %>
+  <% } %>
+
+  <!-- Transaction History -->
+  <div class="mt-4">
+    <h6><i class="fas fa-clock"></i> Recent Transactions</h6>
+    <% if (transactions.length === 0) { %>
+      <p>No transactions yet.</p>
+    <% } else { %>
+      <ul class="list-group">
+        <% transactions.forEach(tx => { %>
+          <li class="list-group-item">
+            <%= tx.type === 'credit' ? 'Received' : 'Sent' %> $<%= tx.amount %> 
+            - <%= new Date(tx.timestamp).toLocaleString() %>
+            <% if (tx.note) { %> - <%= tx.note %> <% } %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+</div>
+
+  <!-- Scrolling Banner -->
+  <div class="marquee-banner">
+    <marquee behavior="scroll" direction="left">
+      🔥 Browse top gigs now • Post your project for free • Earn crypto instantly • Join the Web3 workforce today!
+    </marquee>
+  </div>
+
+  <!-- Carousel -->
+  <div id="heroCarousel" class="carousel slide slider-container" data-bs-ride="carousel">
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <img src="/img/slide1.jpg" class="d-block w-100" style="height: 250px; object-fit: cover;" alt="Slide 1">
+        <div class="carousel-caption text-start">
+          <h3>Need a job?</h3>
+          <p>Find projects that match your skills and earn with ease.</p>
+          <a href="#" class="btn btn-light text-primary">Browse Gigs</a>
+        </div>
+      </div>
+      <!-- other slides -->
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+  <form method="GET" action="/dashboard/seeker" class="mb-3">
+  <input type="text" name="search" placeholder="Search jobs..." class="form-control" />
+  <button type="submit" class="btn btn-primary mt-2">Search</button>
+</form>
+
+
+    <select class="form-select" style="width:200px;">
+      <option selected>Category</option>
+      <optgroup label="Technical">
+        <option>Smart Contract Developer</option>
+        <option>Blockchain Developer</option>
+        <option>Frontend/Backend/Full Stack</option>
+        <option>QA, DevOps, UI/UX, AI/ML, Tokenomics</option>
+      </optgroup>
+      <optgroup label="Non-Technical">
+        <option>Community Manager</option>
+        <option>Writer</option>
+        <option>Designer</option>
+        <option>Social Media</option>
+        <option>Mod</option>
+        <option>PM</option>
+        <option>SEO</option>
+      </optgroup>
+    </select>
+    <select class="form-select" style="width:150px;">
+      <option>Featured</option>
+      <option>Latest</option>
+      <option>Oldest</option>
+    </select>
+  </div>
+
+  <!-- Jobs List (Dynamic) -->
+  <% jobs.forEach(job => { 
+    const deadline = new Date(job.created_at);
+    deadline.setDate(deadline.getDate() + 14); 
+    const daysLeft = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
+  %>
+    <div class="job-card">
+      <div class="job-title">
+        <%= job.title %>
+        <% if (job.is_premium) { %>
+          <span class="badge bg-warning text-dark ms-2">Premium</span>
+        <% } %>
+      </div>
+      <div class="job-meta">Description: <%= job.description.length > 100 ? job.description.substring(0, 100) + '...' : job.description %></div>
+      <div class="job-meta">Budget: $<%= parseFloat(job.budget).toFixed(2) %></div>
+      <div class="job-meta">Ends in <%= daysLeft > 0 ? daysLeft : 0 %> day<%= daysLeft !== 1 ? 's' : '' %></div>
+      <a href="/dashboard/job/<%= job.id %>" class="btn btn-sm btn-outline-primary mt-2">View & Apply</a>
+    </div>
+  <% }) %>
+
+  <% if (!user.is_premium) { %>
+  <div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #fff3cd; border-top: 1px solid #ffeeba; padding: 10px 15px; z-index: 9999;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span>
+        📢 Sponsored: Boost your visibility! Upgrade to Premium for full features.
+      </span>
+      <a href="/dashboard/premium" class="btn btn-sm btn-warning">Go Premium</a>
+    </div>
+  </div>
+<% } %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

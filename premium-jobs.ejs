@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Premium Jobs | GigVault</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      margin-top: 40px;
+    }
+    .job-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .job-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .job-meta {
+      color: #555;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="text-center mb-4">🔒 Premium Job Listings</h2>
+
+    <% if (jobs.length === 0) { %>
+      <p class="text-center">No premium jobs available at the moment. Check back later!</p>
+    <% } %>
+
+    <% jobs.forEach(job => { %>
+      <div class="job-card">
+        <div class="job-title"><%= job.title %></div>
+        <div class="job-meta">
+          Posted by @<%= job.owner_name %> |
+          $<%= job.budget %> |
+          <%= new Date(job.created_at).toDateString() %>
+        </div>
+        <p>
+          <%= job.description.length > 150 ? job.description.substring(0, 150) + '...' : job.description %>
+        </p>
+        <a href="/dashboard/job/<%= job.id %>" class="btn btn-primary btn-sm">View & Apply</a>
+      </div>
+    <% }) %>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
